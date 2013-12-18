@@ -35,3 +35,14 @@
                     (users_and_ratings compare_user))
                    compare_user]))
           users)))))
+
+
+(defn recommend
+  [users_and_ratings user]
+  (let [nearest (second (first (nearest-neighbor users_and_ratings user)))
+         nearest_ratings (users_and_ratings nearest)
+         user_ratings (users_and_ratings user)
+         not_yet_seen (filter
+                        #(not (contains? user_ratings %1))
+                        (keys nearest_ratings))]
+    (sort-by last > (map #(find nearest_ratings %1) not_yet_seen))))
