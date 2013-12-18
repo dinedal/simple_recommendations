@@ -26,6 +26,18 @@
                          nil))
                      ratings))))) movie_rows))))
 
+(facts
+  (fact "merge-common-with is merge-with"
+    (merge-common-with + {:foo 5} {:foo 5}) => (merge-with + {:foo 5} {:foo 5}))
+  (fact "but only with common keys"
+    (merge-common-with + {:bar 5} {:foo 5}) => {}
+    (merge-common-with + {:bar 5 :foo 5 :d 1} {:foo 5 :bar 5}) => {:foo 10 :bar 10}))
 
-(fact "FIXME, I fail."
-  (= 0 1) => true)
+(fact "manhattan calculates manhattan distance between two users' ratings"
+  (manhattan (users_and_ratings "Gary") (users_and_ratings "Gary")) => 0
+  (manhattan (users_and_ratings "Gary") (users_and_ratings "Zak"))  => 19
+  (manhattan (users_and_ratings "Gary") {})                         => 0)
+
+(fact "nearest-neighbor uses manhattan distance to determine users most alike"
+  (nearest-neighbor users_and_ratings "Gary") => '([5 "Matt"] [9 "Jessica"] [11 "Josh"] [15 "Heather"] [15 "greg"] [16 "Erin"] [16 "vanessa"] [18 "Chris"] [18 "Katherine"] [19 "Bryan"] [19 "Patrick C"] [19 "Patrick T"] [19 "Zak"] [20 "Amy"] [20 "Jonathan"] [21 "Zwe"] [21 "aaron"] [21 "ben"] [22 "Stephen"] [22 "Valerie"] [23 "Thomas"] [24 "Jeff"] [26 "brian"])
+  (nearest-neighbor users_and_ratings "Zak")  => '([5 "Josh"] [6 "Matt"] [7 "Erin"] [8 "Jessica"] [9 "Heather"] [10 "Jonathan"] [11 "Amy"] [11 "aaron"] [11 "brian"] [12 "Katherine"] [13 "Bryan"] [13 "Stephen"] [14 "Zwe"] [15 "Jeff"] [15 "Patrick C"] [15 "ben"] [15 "greg"] [16 "Patrick T"] [18 "Chris"] [19 "Gary"] [19 "vanessa"] [22 "Valerie"] [24 "Thomas"]))
