@@ -1,6 +1,7 @@
 (ns simple-recommendations.core-test
   (:require [clojure.test :refer :all]
     [simple-recommendations.core :refer :all]
+    [simple-recommendations.internal :refer :all]
     [clojure-csv.core :as csv]
     [clojure.string :as string])
   (:use midje.sweet clojure.test simple-recommendations.core))
@@ -25,13 +26,6 @@
                            {movie (Integer/parseInt rating)}}
                          nil))
                      ratings))))) movie_rows))))
-
-(facts
-  (fact "merge-common-with is merge-with"
-    (merge-common-with + {:foo 5} {:foo 5}) => (merge-with + {:foo 5} {:foo 5}))
-  (fact "but only with common keys"
-    (merge-common-with + {:bar 5} {:foo 5}) => {}
-    (merge-common-with + {:bar 5 :foo 5 :d 1} {:foo 5 :bar 5}) => {:foo 10 :bar 10}))
 
 (fact "manhattan calculates manhattan distance between two users' ratings"
   (manhattan (users_and_ratings "Gary") (users_and_ratings "Gary")) => 0

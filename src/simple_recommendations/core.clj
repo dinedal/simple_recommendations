@@ -1,17 +1,17 @@
-(ns simple-recommendations.core)
+;; # Simple Recommendations
+;; Takes (some) of the algorithms described in http://guidetodatamining.com/
+;; and implements them in clojure. Not a direct port, as these versions are
+;; designed to allow for querying against datasets which do not include
+;; the user they are recommending for.
+;;
+;; This is ideal in cases where the data being used to source the
+;; recommendations is partitioned and the query source may not have all the
+;; data at a given time.
 
+(ns simple-recommendations.core
+  (:require [simple-recommendations.internal :refer :all]
+    [simple-recommendations.heap-sort :refer :all]))
 
-(defn merge-common-with [f m1 m2]
-  (let [[a b] (if (< (count m1) (count m2))
-                [m1 m2]
-                [m2 m1])]
-    (persistent!
-     (reduce-kv (fn [out k v]
-                  (if (contains? b k)
-                    (assoc! out k (f (get a k) (get b k)))
-                    out))
-                (transient {})
-                a))))
 
 (defn manhattan
   [user_ratings1 user_ratings2]
@@ -24,25 +24,24 @@
 
 
 (defn nearest-neighbor
-  [users_and_ratings user]
-  (let [users (keys users_and_ratings)]
-    (sort
-      (remove nil?
-        (map (fn [compare_user]
-               (if (not= user compare_user)
-                 [(manhattan
-                    (users_and_ratings user)
-                    (users_and_ratings compare_user))
-                   compare_user]))
-          users)))))
-
+  [users_and_ratings user_ratings]
+  (let [user_name (-> user_ratings (keys) (first))
+         ratings (user_ratings user_name)
+         users_and_ratings_without_user
+         (remove #(= user_name (first %1)) users_and_ratings)]
+    (heap-sort-by
+      (fn [user_rating_pair] (second user_rating_pair))
+      (fn [a b] (compare (manhattan ratings a) (manhattan ratings b)))
+      users_and_ratings_without_user)))
 
 (defn recommend
-  [users_and_ratings user]
-  (let [nearest (second (first (nearest-neighbor users_and_ratings user)))
-         nearest_ratings (users_and_ratings nearest)
-         user_ratings (users_and_ratings user)
+  [users_and_ratings user_ratings]
+  (let [nearest_user_ratings
+         (first (nearest-neighbor-sort-nd users_and_ratings user_ratings))
+         nearest (first nearest_user_ratings)
+         nearest_ratings (second nearest_user_ratings)
+         user_name (-> user_ratings (keys) (first))
          not_yet_seen (filter
-                        #(not (contains? user_ratings %1))
+                        #(not (contains? (user_ratings user_name) %1))
                         (keys nearest_ratings))]
-    (sort-by last > (map #(find nearest_ratings %1) not_yet_seen))))
+    (heap-sort-by last > (map #(find nearest_ratings %1) not_yet_seen))))
