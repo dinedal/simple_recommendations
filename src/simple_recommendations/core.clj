@@ -30,22 +30,30 @@
         user_ratings1
         user_ratings2))))
 
+(defn manhattan-comp
+  "Compare two different users_ratings closeness to the third"
+  [pivot_user user_ratings1 user_ratings2]
+  (compare
+    (manhattan pivot_user user_ratings1)
+    (manhattan pivot_user user_ratings2)))
+
 
 (defn nearest-neighbor
   [users_and_ratings user_ratings]
   (let [user_name (-> user_ratings (keys) (first))
          ratings (user_ratings user_name)
          users_and_ratings_without_user
-         (remove #(= user_name (first %1)) users_and_ratings)]
+         (remove #(= user_name (first %1)) users_and_ratings)
+         distance_comparator (partial manhattan-comp ratings)]
     (heap-sort-by
       (fn [user_rating_pair] (second user_rating_pair))
-      (fn [a b] (compare (manhattan ratings a) (manhattan ratings b)))
+      distance_comparator
       users_and_ratings_without_user)))
 
 (defn recommend
   [users_and_ratings user_ratings]
   (let [nearest_user_ratings
-         (first (nearest-neighbor-sort-nd users_and_ratings user_ratings))
+         (first (nearest-neighbor users_and_ratings user_ratings))
          nearest (first nearest_user_ratings)
          nearest_ratings (second nearest_user_ratings)
          user_name (-> user_ratings (keys) (first))

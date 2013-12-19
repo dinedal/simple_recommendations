@@ -33,5 +33,11 @@
   (manhattan (users_and_ratings "Gary") {})                         => 0)
 
 (fact "nearest-neighbor uses manhattan distance to determine users most alike"
-  (nearest-neighbor users_and_ratings "Gary") => '([5 "Matt"] [9 "Jessica"] [11 "Josh"] [15 "Heather"] [15 "greg"] [16 "Erin"] [16 "vanessa"] [18 "Chris"] [18 "Katherine"] [19 "Bryan"] [19 "Patrick C"] [19 "Patrick T"] [19 "Zak"] [20 "Amy"] [20 "Jonathan"] [21 "Zwe"] [21 "aaron"] [21 "ben"] [22 "Stephen"] [22 "Valerie"] [23 "Thomas"] [24 "Jeff"] [26 "brian"])
-  (nearest-neighbor users_and_ratings "Zak")  => '([5 "Josh"] [6 "Matt"] [7 "Erin"] [8 "Jessica"] [9 "Heather"] [10 "Jonathan"] [11 "Amy"] [11 "aaron"] [11 "brian"] [12 "Katherine"] [13 "Bryan"] [13 "Stephen"] [14 "Zwe"] [15 "Jeff"] [15 "Patrick C"] [15 "ben"] [15 "greg"] [16 "Patrick T"] [18 "Chris"] [19 "Gary"] [19 "vanessa"] [22 "Valerie"] [24 "Thomas"]))
+  (->
+    (nearest-neighbor users_and_ratings {"Gary" (users_and_ratings "Gary")})
+    (first)
+    (first)) => "Matt"
+  (->
+    (nearest-neighbor users_and_ratings {"Zak" (users_and_ratings "Zak")})
+    (first)
+    (first)) => "Josh")
