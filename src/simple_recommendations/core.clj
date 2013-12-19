@@ -7,6 +7,14 @@
 ;; This is ideal in cases where the data being used to source the
 ;; recommendations is partitioned and the query source may not have all the
 ;; data at a given time.
+;;
+;; Functions generally expect that take in partial data of the form:
+;;     many_users_and_ratings => {:user {:item rating ...} ...}
+;;       => {"Sally" {"Popsciles" 5 "Baseball" 1}
+;;           "Billy" {"Popsciles" 5 "Baseball" 5 "Ice Cream" 3}}
+;;     and
+;;     one_user_and_ratings => {:user {:item rating ...}}
+;;       => {"Jenny" {"Popsciles" 5 "Baseball" 3}}
 
 (ns simple-recommendations.core
   (:require [simple-recommendations.internal :refer :all]
