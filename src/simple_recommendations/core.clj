@@ -18,24 +18,36 @@
 
 (ns simple-recommendations.core
   (:require [simple-recommendations.internal :refer :all]
-    [simple-recommendations.heap-sort :refer :all]))
+    [simple-recommendations.heap-sort :refer :all]
+    [clojure.math.numeric-tower :as math]))
 
 
-(defn manhattan
-  [user_ratings1 user_ratings2]
-  (reduce +
-    (vals
-      (merge-common-with
-        (fn [a b] (Math/abs (- a b)))
-        user_ratings1
-        user_ratings2))))
+(defn minkowski
+  [r user_ratings1 user_ratings2]
+  (math/expt
+    (reduce +
+      (vals
+        (merge-common-with
+          (fn [a b] (math/expt (math/abs (- a b)) r))
+          user_ratings1
+          user_ratings2))) (/ 1 r)))
 
-(defn manhattan-comp
-  "Compare two different users_ratings closeness to the third"
-  [pivot_user user_ratings1 user_ratings2]
-  (compare
-    (manhattan pivot_user user_ratings1)
-    (manhattan pivot_user user_ratings2)))
+(def manhattan (partial minkowski 1))
+(def euclidean (partial minkowski 2))
+
+
+(defn pivot-compare
+  "Returns a compare function that will compare,
+  using the provided distance function, how close
+  two different users are two a third"
+  [distance_fn]
+  (fn [pivot_user user_ratings1 user_ratings2]
+    (compare
+      (distance_fn pivot_user user_ratings1)
+      (distance_fn pivot_user user_ratings2))))
+
+(def manhattan-comp (pivot-compare manhattan))
+(def euclidean-comp (pivot-compare euclidean))
 
 
 (defn nearest-neighbor
