@@ -36,6 +36,38 @@
 (def euclidean (partial minkowski 2))
 
 
+(defn pearson
+  "This is an approximation of the pearson coefficent,
+   a measure of how much two users agree on ratings"
+  [user_ratings1 user_ratings2]
+  (let [sums
+         (reduce (fn [a b] {:xy  (+ (a :xy) (b :xy))
+                             :x  (+ (a :x)  (b :x))
+                             :y  (+ (a :y)  (b :y))
+                             :x2 (+ (a :x2) (b :x2))
+                             :y2 (+ (a :y2) (b :y2))
+                             :n  (+ (a :n)  (b :n))
+                             })
+           (vals
+             (merge-common-with
+               (fn [a b]
+                 {:xy (* a b)
+                   :x a
+                   :y b
+                   :x2 (math/expt a 2)
+                   :y2 (math/expt b 2)
+                   :n 1
+                   })
+               user_ratings1
+               user_ratings2)))
+         denominator (*
+                       (math/sqrt
+                         (- (sums :x2) (/ (math/expt (sums :x) 2) (sums :n))))
+                       (math/sqrt
+                         (- (sums :y2) (/ (math/expt (sums :y) 2) (sums :n)))))]
+    (if (= denominator 0) 0
+      (/ (- (sums :xy) (/ (* (sums :x) (sums :y)) (sums :n))) denominator))))
+
 (defn pivot-compare
   "Returns a compare function that will compare,
   using the provided distance function, how close
