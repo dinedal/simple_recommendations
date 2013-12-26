@@ -47,12 +47,28 @@
     (users_and_ratings "Josh")) => 1
   )
 
-(fact "nearest-neighbor uses manhattan distance to determine users most alike"
+(fact "nearest-neighbor uses given compairison function to determine users most alike"
   (->
-    (nearest-neighbor users_and_ratings {"Gary" (users_and_ratings "Gary")})
+    (nearest-neighbor
+      manhattan-comp
+      users_and_ratings {"Gary" (users_and_ratings "Gary")})
     (first)
     (first)) => "Matt"
   (->
-    (nearest-neighbor users_and_ratings {"Zak" (users_and_ratings "Zak")})
+    (nearest-neighbor
+      manhattan-comp
+      users_and_ratings {"Zak" (users_and_ratings "Zak")})
     (first)
     (first)) => "Josh")
+
+(fact "pearson coefficent is calculated correctly"
+  (pearson
+    (other_users_and_ratings "Angelica")
+    (other_users_and_ratings "Bill"))   => -0.9040534990682699
+  (pearson
+    (other_users_and_ratings "Angelica")
+    (other_users_and_ratings "Hailey")) => 0.42008402520840293
+  (pearson
+    (other_users_and_ratings "Angelica")
+    (other_users_and_ratings "Jordyn")) => 0.7639748605475432
+  )

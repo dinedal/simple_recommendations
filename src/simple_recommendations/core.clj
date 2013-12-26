@@ -80,24 +80,25 @@
 
 (def manhattan-comp (pivot-compare manhattan))
 (def euclidean-comp (pivot-compare euclidean))
+(def pearson-comp   (pivot-compare pearson))
 
 
 (defn nearest-neighbor
-  [users_and_ratings user_ratings]
+  [comp-fn users_and_ratings user_ratings]
   (let [user_name (-> user_ratings (keys) (first))
          ratings (user_ratings user_name)
          users_and_ratings_without_user
          (remove #(= user_name (first %1)) users_and_ratings)
-         distance_comparator (partial manhattan-comp ratings)]
+         distance_comparator (partial comp-fn ratings)]
     (heap-sort-by
       (fn [user_rating_pair] (second user_rating_pair))
       distance_comparator
       users_and_ratings_without_user)))
 
 (defn recommend
-  [users_and_ratings user_ratings]
+  [comp-fn users_and_ratings user_ratings]
   (let [nearest_user_ratings
-         (first (nearest-neighbor users_and_ratings user_ratings))
+         (first (nearest-neighbor comp-fn users_and_ratings user_ratings))
          nearest (first nearest_user_ratings)
          nearest_ratings (second nearest_user_ratings)
          user_name (-> user_ratings (keys) (first))
