@@ -65,9 +65,14 @@
                          (- (sums :x2) (/ (math/expt (sums :x) 2) (sums :n))))
                        (math/sqrt
                          (- (sums :y2) (/ (math/expt (sums :y) 2) (sums :n)))))]
-    (if (= denominator 0) 0
+    (if (= (double denominator) (double 0)) 0.0
       (/ (- (sums :xy) (/ (* (sums :x) (sums :y)) (sums :n))) denominator))))
 
+(defn inverse-pearson
+  "Pearson approximation but inverted for sorting by agreement
+   instead of disagree-ment"
+  [user_ratings1 user_ratings2]
+  (* (pearson user_ratings1 user_ratings2) -1))
 
 
 (defn cosine-similarity
@@ -122,6 +127,7 @@
 (def manhattan-comp (pivot-compare manhattan))
 (def euclidean-comp (pivot-compare euclidean))
 (def pearson-comp   (pivot-compare pearson))
+(def inverse-pearson-comp   (pivot-compare inverse-pearson))
 
 
 (defn nearest-neighbor
@@ -137,13 +143,36 @@
       users_and_ratings_without_user)))
 
 (defn recommend
-  [comp-fn users_and_ratings user_ratings]
-  (let [nearest_user_ratings
-         (first (nearest-neighbor comp-fn users_and_ratings user_ratings))
-         nearest (first nearest_user_ratings)
-         nearest_ratings (second nearest_user_ratings)
-         user_name (-> user_ratings (keys) (first))
-         not_yet_seen (filter
-                        #(not (contains? (user_ratings user_name) %1))
-                        (keys nearest_ratings))]
-    (heap-sort-by last > (map #(find nearest_ratings %1) not_yet_seen))))
+  [k n comp-fn sort-fn users_and_ratings user_ratings]
+  (let [nearests (take k (nearest-neighbor sort-fn users_and_ratings user_ratings))
+         distances (map (fn [user_and_ratings]
+                          {(first user_and_ratings)
+                            (comp-fn
+                              (second user_and_ratings)
+                              (first (vals user_ratings)))}) nearests)
+         total_distance (reduce + (map #(-> %1 vals first) distances))
+         weights (reduce conj
+                   (map (fn [users_and_ratings]
+                          {(first (keys users_and_ratings))
+                            (/ (first (vals users_and_ratings)) total_distance)})
+                     distances))
+         ratings (first (vals user_ratings))
+         ]
+    (->> (reduce #(merge-with + %1 %2)
+          (map (fn [neighbor_ratings]
+                 (let [neighbor (first neighbor_ratings)
+                        compare_ratings (second neighbor_ratings)
+                        to_reccomend
+                        (remove (set (keys ratings)) (keys compare_ratings))
+                        ]
+                   (if (some identity to_reccomend)
+                     (reduce conj
+                       (map (fn [item]
+                              {item
+                                (* (compare_ratings item) (weights neighbor))}
+                              ) to_reccomend))
+                     {}))
+                 ) nearests))
+      (sort-by val)
+      (reverse))
+    ))

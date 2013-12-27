@@ -72,3 +72,12 @@
     (other_users_and_ratings "Angelica")
     (other_users_and_ratings "Jordyn")) => 0.7639748605475432
   )
+
+(fact "reccomend returns k-nearest neighbor reccomendations"
+  (recommend 1 5 pearson inverse-pearson-comp
+    other_users_and_ratings
+    {"Jordyn" (other_users_and_ratings "Jordyn")}) => '(["Blues Traveler" 5.0])
+  (recommend 1 5 pearson inverse-pearson-comp
+    other_users_and_ratings
+    {"Hailey" (other_users_and_ratings "Hailey")}) => '(["Phoenix" 5.0] ["Slightly Stoopid" 4.5])
+  )
