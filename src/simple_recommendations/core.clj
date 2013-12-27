@@ -68,6 +68,47 @@
     (if (= denominator 0) 0
       (/ (- (sums :xy) (/ (* (sums :x) (sums :y)) (sums :n))) denominator))))
 
+
+
+(defn cosine-similarity
+  [user_ratings1 user_ratings2]
+  (let [all_keys (reduce conj (keys user_ratings1) (keys user_ratings2))]
+    (map
+      (fn [key] (let [a (or (user_ratings1 key) 0)
+                       b (or (user_ratings2 key) 0)]
+                  {:x a
+                    :y b
+                    :x2 (math/expt a 2)
+                    :y2 (math/expt b 2)
+                    :xy (* a b)
+                    }))
+      all_keys)))
+
+(defn cosine-similarity
+  [user_ratings1 user_ratings2]
+  (let [all_keys (distinct (reduce conj (keys user_ratings1) (keys user_ratings2)))
+         data_with_placeholders
+         (map
+           (fn [key] (let [a (or (user_ratings1 key) 0)
+                            b (or (user_ratings2 key) 0)]
+                       {:x a
+                         :y b
+                         :x2 (math/expt a 2)
+                         :y2 (math/expt b 2)
+                         :xy (* a b)
+                         }))
+           all_keys)
+         sums
+         (reduce
+           (fn [a b] {:x (+ (a :x) (b :x))
+                       :y (+ (a :y) (b :y))
+                       :x2 (+ (a :x2) (b :x2))
+                       :y2 (+ (a :y2) (b :y2))
+                       :xy (+ (a :xy) (b :xy))})
+           data_with_placeholders)]
+    (/ (sums :xy) (* (math/sqrt (sums :x2)) (math/sqrt (sums :y2))))))
+
+
 (defn pivot-compare
   "Returns a compare function that will compare,
   using the provided distance function, how close
